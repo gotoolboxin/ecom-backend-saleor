@@ -29,6 +29,7 @@ def get_bool_from_env(name, default_value):
         except ValueError as e:
             raise ValueError("{} is an invalid value for {}".format(value, name)) from e
     return default_value
+SECRET_KEY = '7x%te_pe_rbv9y8u3=0+&w%8z^65^z)qyl23q2)vx5+0yws9zt'
 
 
 DEBUG = get_bool_from_env("DEBUG", True)
@@ -60,10 +61,18 @@ if not ALLOWED_CLIENT_HOSTS:
 ALLOWED_CLIENT_HOSTS = get_list(ALLOWED_CLIENT_HOSTS)
 
 INTERNAL_IPS = get_list(os.environ.get("INTERNAL_IPS", "127.0.0.1"))
+CORS_ALLOWED_ORIGINS=["https://dashboard-ecom.stage.gotoolbox.in"]
+CORS_ALLOW_CREDENTIALS = True
+
+from corsheaders.defaults import default_headers
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'authorization-bearer',
+]
 
 DATABASES = {
     "default": dj_database_url.config(
-        default="postgres://saleor:saleor@localhost:5432/saleor", conn_max_age=600
+        default="postgres://saleor:saleor@localhost:5432/saleor3", conn_max_age=600
     )
 }
 
@@ -200,13 +209,15 @@ TEMPLATES = [
 ]
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = os.environ.get("SECRET_KEY")
+#SECRET_KEY = os.environ.get("SECRET_KEY")
 
 if not SECRET_KEY and DEBUG:
     warnings.warn("SECRET_KEY not configured, using a random temporary key.")
     SECRET_KEY = get_random_secret_key()
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
     "saleor.core.middleware.request_time",
@@ -263,6 +274,7 @@ INSTALLED_APPS = [
     "django_countries",
     "django_filters",
     "phonenumber_field",
+    "corsheaders",
 ]
 
 
@@ -571,12 +583,12 @@ if REDIS_URL:
 CACHES = {"default": django_cache_url.config()}
 
 # Default False because storefront and dashboard don't support expiration of token
-JWT_EXPIRE = get_bool_from_env("JWT_EXPIRE", False)
-JWT_TTL_ACCESS = timedelta(seconds=parse(os.environ.get("JWT_TTL_ACCESS", "5 minutes")))
+JWT_EXPIRE =  True
+JWT_TTL_ACCESS = timedelta(seconds=parse("5 minutes"))
 JWT_TTL_APP_ACCESS = timedelta(
-    seconds=parse(os.environ.get("JWT_TTL_APP_ACCESS", "5 minutes"))
+    seconds=parse("5 minutes")
 )
-JWT_TTL_REFRESH = timedelta(seconds=parse(os.environ.get("JWT_TTL_REFRESH", "30 days")))
+JWT_TTL_REFRESH = timedelta(seconds=parse("30 days"))
 
 
 JWT_TTL_REQUEST_EMAIL_CHANGE = timedelta(
