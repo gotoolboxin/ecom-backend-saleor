@@ -61,7 +61,7 @@ if not ALLOWED_CLIENT_HOSTS:
 ALLOWED_CLIENT_HOSTS = get_list(ALLOWED_CLIENT_HOSTS)
 
 INTERNAL_IPS = get_list(os.environ.get("INTERNAL_IPS", "127.0.0.1"))
-CORS_ALLOWED_ORIGINS=["https://dashboard-ecom.stage.gotoolbox.in"]
+CORS_ALLOWED_ORIGINS=["https://dashboard-ecom.stage.gotoolbox.in", "http://localhost:9000", "http://localhost:3000"]
 CORS_ALLOW_CREDENTIALS = True
 
 from corsheaders.defaults import default_headers
@@ -72,7 +72,7 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 
 DATABASES = {
     "default": dj_database_url.config(
-        default="postgres://saleor:saleor@localhost:5432/saleor3", conn_max_age=600
+        default="postgres://saleor:saleor@localhost:5432/saleor4", conn_max_age=600
     )
 }
 
@@ -217,7 +217,7 @@ if not SECRET_KEY and DEBUG:
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
-
+    'oauth2_provider.middleware.OAuth2TokenMiddleware',
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
     "saleor.core.middleware.request_time",
@@ -239,6 +239,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.auth",
     "django.contrib.postgres",
+    'oauth2_provider',
     # Local apps
     "saleor.plugins",
     "saleor.account",
@@ -464,6 +465,12 @@ VERSATILEIMAGEFIELD_SETTINGS = {
     "create_images_on_demand": get_bool_from_env("CREATE_IMAGES_ON_DEMAND", DEBUG)
 }
 
+OAUTH2_PROVIDER = {
+
+    'RESOURCE_SERVER_INTROSPECTION_URL': 'http://localhost:8000/api/v1/introspect',
+
+    'RESOURCE_SERVER_INTROSPECTION_CREDENTIALS': ('AX7D4hckjQgOLouvyfUWM1CKPyj97pfmD5Zk5RVO', 'FNATDeaFKQezZR0ekpEUV9ZwrEBNnC2mPxsNH06Sy5yItsOVgNZTjBbyNvRIsJMcBZ1iKF9NsQXaoPdRL6JXU4ZSfljvdutEx1CjIrCtr5KvbPuzgIjM04NTW9ibbA55'),
+}
 PLACEHOLDER_IMAGES = {
     60: "images/placeholder60x60.png",
     120: "images/placeholder120x120.png",
@@ -472,6 +479,19 @@ PLACEHOLDER_IMAGES = {
     1080: "images/placeholder1080x1080.png",
 }
 
+# Rest Framework Settings
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        # "knox.auth.TokenAuthentication",  # To keep the Browsable API
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+    ),
+}
 DEFAULT_PLACEHOLDER = "images/placeholder255x255.png"
 
 SEARCH_BACKEND = "saleor.search.backends.postgresql"
@@ -515,6 +535,8 @@ GRAPHENE = {
         "saleor.graphql.middleware.OpentracingGrapheneMiddleware",
         "saleor.graphql.middleware.JWTMiddleware",
         "saleor.graphql.middleware.app_middleware",
+        # 'oauth2_provider.middleware.OAuth2TokenMiddleware',
+
     ],
 }
 

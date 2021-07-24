@@ -134,7 +134,10 @@ class UserManager(BaseUserManager):
 
 
 class User(PermissionsMixin, ModelWithMetadata, AbstractBaseUser):
-    email = models.EmailField(unique=True)
+    email = models.EmailField(blank=True, null=True)
+    name = models.CharField(max_length=64, null=True, blank=True)
+    phone = models.CharField(max_length=12, unique=True, blank=True, null=True)
+    user_id = models.IntegerField(blank=True, null=True, unique=True)
     first_name = models.CharField(max_length=256, blank=True)
     last_name = models.CharField(max_length=256, blank=True)
     addresses = models.ManyToManyField(
@@ -153,12 +156,12 @@ class User(PermissionsMixin, ModelWithMetadata, AbstractBaseUser):
     avatar = VersatileImageField(upload_to="user-avatars", blank=True, null=True)
     jwt_token_key = models.CharField(max_length=12, default=get_random_string)
 
-    USERNAME_FIELD = "email"
+    USERNAME_FIELD = "phone"
 
     objects = UserManager()
 
     class Meta:
-        ordering = ("email",)
+        ordering = ("name",)
         permissions = (
             (AccountPermissions.MANAGE_USERS.codename, "Manage customers."),
             (AccountPermissions.MANAGE_STAFF.codename, "Manage staff."),
